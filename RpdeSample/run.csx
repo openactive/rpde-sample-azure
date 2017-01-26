@@ -62,7 +62,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
     using (SqlConnection conn = new SqlConnection(str))
     {
         string queryString =
-            "SELECT TOP 5 PRODUCTID, CONVERT(VARCHAR(33), MODIFIEDDATE, 126), NAME, PRODUCTNUMBER, COLOR FROM SalesLT.Product "
+            "SELECT TOP 50 PRODUCTID, CONVERT(VARCHAR(33), MODIFIEDDATE, 126), NAME, PRODUCTNUMBER, COLOR FROM SalesLT.Product "
                 + (afterTimestamp != null ? " WHERE " : "")
                 + (afterTimestamp != null && afterId == null ? " MODIFIEDDATE > Convert(varchar(30),@afterTimestamp,102) " : "")
                 + (afterTimestamp != null && afterId != null ? " (MODIFIEDDATE = Convert(varchar(30),@afterTimestamp,102) AND PRODUCTID > @afterId) OR (MODIFIEDDATE > Convert(varchar(30),@afterTimestamp,102))  " : "")
