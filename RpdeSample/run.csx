@@ -37,17 +37,12 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
 {
     log.Info("C# HTTP trigger function processed a request.");
 
-    // parse query parameter
-    string code = req.GetQueryNameValuePairs()
-        .FirstOrDefault(q => string.Compare(q.Key, "code", true) == 0)
-        .Value;
-
     // parse query parameters 'afterTimestamp' and 'afterId'
     string afterTimestamp = req.GetQueryNameValuePairs()
         .FirstOrDefault(q => string.Compare(q.Key, "afterTimestamp", true) == 0)
         .Value;
 
-    // note for implementations where SQL Server's rowversion is used
+    // note for implementations where SQL Server's rowversion is used, this is not required
     string afterId = req.GetQueryNameValuePairs()
         .FirstOrDefault(q => string.Compare(q.Key, "afterId", true) == 0)
         .Value;
@@ -61,6 +56,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
     var str = ConfigurationManager.ConnectionStrings["sqldb_connection"].ConnectionString;
     using (SqlConnection conn = new SqlConnection(str))
     {
+        // Query for paging as shown in https://www.openactive.io/realtime-paged-data-exchange/#modified-timestamp-and-id
         string queryString =
             "SELECT TOP 50 PRODUCTID, CONVERT(VARCHAR(33), MODIFIEDDATE, 126), NAME, PRODUCTNUMBER, COLOR FROM SalesLT.Product "
                 + (afterTimestamp != null ? " WHERE " : "")
@@ -84,7 +80,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
                  productData.productNumber = $"{reader[3]}";
                  productData.color = $"{reader[4]}";
 
-                 var isDeleted = false; //TODO: Handle deleted flag here
+                 var isDeleted = false; // Here is where you might add a deleted flag if this record is marked as deleted
 
                  var item = new Item();
                  item.id = $"{reader[0]}";
@@ -109,7 +105,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
 
     var e = JsonConvert.SerializeObject(RpdeBody);
 
-    //log.Info(e);
+    log.Info("RPDE JSON page output: " + e);
 
     var resp = afterTimestamp == null
         ? req.CreateResponse(HttpStatusCode.BadRequest, "Invalid parameters")
